@@ -1,1 +1,1 @@
-My own quest in learning Artificial Intelligence.
+My quest in learning Artificial Intelligence.
