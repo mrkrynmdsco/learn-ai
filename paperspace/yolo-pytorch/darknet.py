@@ -30,7 +30,7 @@ def parse_cfg(cfgfile):
         lines = [x for x in lines if len(x) > 0]        # remove the empty lines
         lines = [x for x in lines if x[0] != '#']       # remove comments
         lines = [x.rstrip().lstrip() for x in lines]    # remove the fringe whitespaces
-    
+
     block = {}
     blocks = []
 
@@ -63,7 +63,7 @@ def create_modules(blocks):
         # append to module_list
 
         if (x['type'] == 'convolutional'):
-            # get teh info about the layer
+            # Get the info about the layer
             activation = x['activation']
             try:
                 batch_normalize = int(x['batch_normalize'])
@@ -71,7 +71,7 @@ def create_modules(blocks):
             except:
                 batch_normalize = 0
                 bias = True
-            
+
             filters = int(x['filters'])
             padding = int(x['pad'])
             kernel_size = int(x['size'])
@@ -81,7 +81,7 @@ def create_modules(blocks):
                 pad = (kernel_size - 1) // 2
             else:
                 pad = 0
-            
+
             # Add the convolutional layer
             conv = nn.Conv2d(prev_filters, kernel_size, stride, pad, bias=bias)
             module.add_module('conv_{0}'.format(index), conv)
@@ -90,37 +90,37 @@ def create_modules(blocks):
             if batch_normalize:
                 bn = nn.BatchNorm2d(filters)
                 module.add_module('batch_norm_{0}'.format(index), bn)
-            
+
             # Check the activation (either Leaky or ReLU for YOLO)
             if activation == 'leaky':
                 activn = nn.LeakyReLU(0.1, inplace=True)
                 module.add_module('leaky_{0}'.format(index), activn)
-        
+
         # if it's an upsampling layer (we use Bilinear2dUpsampling)
         elif x['type'] == 'upsample':
             stride = int(x['stride'])
             upsample = nn.Upsample(scale_factor=2, mode='bilinear')
             module.add_module('upsample_{0}'.format(index), upsample)
-        
+
         # if it's a route layer
         elif x['type'] == 'route':
             x['layers'] = x['layers'].split(',')
-            
+
             # start of a route
             start = int(x['layers'][0])
-            
+
             # end, if there exists one
             try:
                 end = int(x['layers'][1])
             except:
                 end = 0
-            
+
             # positive annotation
             if start > 0:
                 start = start - index
             if end > 0:
                 end = end - index
-            
+
             route = EmptyLayer()
             module.add_module('route_{0}'.format(index), route)
 
@@ -129,12 +129,12 @@ def create_modules(blocks):
             else:
                 # filters = output_filters[index + start]
                 pass
-            
+
         # shortcut corresponds to skip connection
         elif x['type'] == 'shortcut':
             shortcut = EmptyLayer()
             module.add_module('shourtcut_{0}'.format(index), shortcut)
-        
+
         # YOLO is the detection layer
         elif x['type'] == 'yolo':
             mask = x['mask'].split(',')
@@ -147,7 +147,7 @@ def create_modules(blocks):
 
             detection = DetectionLayer(anchors)
             module.add_module('detection_{0}'.format(index), detection)
-        
+
         else:
             print('Something I dunno')
             assert False
@@ -160,6 +160,9 @@ def create_modules(blocks):
     return (net_info, module_list)
 
 
-# test
-blocks = parse_cfg('cfg/yolov3.cfg')
-print(create_modules(blocks))
+class Darknet(nn.Module):
+    def __init__(self, cfgfile):
+        super().__init__()
+        self.blocks = parse_cfg(cfgfile)
+        self.net_info, self.module_list = create_modules(self.blocks)
+
