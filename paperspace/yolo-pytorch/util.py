@@ -3,7 +3,7 @@ import torch
 import numpy as np
 
 
-def predict_transform(prediction, in_dim, anchors, num_classes, CUDA=True):
+def predict_transform(prediction, in_dim, anchors, num_classes, CUDA):
     batch_size = prediction.size(0)
     stride = in_dim // prediction.size(2)
     grid_size = in_dim // stride
@@ -28,18 +28,17 @@ def predict_transform(prediction, in_dim, anchors, num_classes, CUDA=True):
     x_offset = torch.FloatTensor(a).view(-1, 1)
     y_offset = torch.FloatTensor(b).view(-1, 1)
 
-    if CUDA:
-        x_offset = x_offset.cuda()
-        y_offset = y_offset.cuda()
-
-    x_y_offset = torch.cat((x_offset, y_offset), 1).repeat(1, num_anchors).view(-1, 2).unsqueeze(0)
-    prediction[:, :, :2] += x_y_offset
-
     # Log space transform height and width
     anchors = torch.FloatTensor(anchors)
 
     if CUDA:
+        prediction = prediction.cuda()
+        x_offset = x_offset.cuda()
+        y_offset = y_offset.cuda()
         anchors = anchors.cuda()
+
+    x_y_offset = torch.cat((x_offset, y_offset), 1).repeat(1, num_anchors).view(-1, 2).unsqueeze(0)
+    prediction[:, :, :2] += x_y_offset
 
     anchors = anchors.repeat(grid_size * grid_size, 1).unsqueeze(0)
     prediction[:, :, 2:4] = torch.exp(prediction[:, :, 2:4]) * anchors
