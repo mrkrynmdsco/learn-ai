@@ -129,8 +129,7 @@ def create_modules(blocks):
             if end < 0:
                 filters = output_filters[index + start] + output_filters[index + end]
             else:
-                # filters = output_filters[index + start]
-                pass
+                filters = output_filters[index + start]
 
         # shortcut corresponds to skip connection
         elif x['type'] == 'shortcut':
@@ -187,10 +186,10 @@ class Darknet(nn.Module):
 
         for i, module in enumerate(modules):
             module_type = module['type']
+            print(self.module_list[i])
 
             if module_type in ['convolutional', 'upsample']:
                 x = self.module_list[i](x)
-                print(self.module_list[i])
 
             elif module_type in ['route']:
                 layers = module['layers']
@@ -245,3 +244,4 @@ inp = get_test_input()
 cuda = torch.cuda.is_available()
 pred = model(inp, cuda)
 print(pred)
+print(pred.size())
