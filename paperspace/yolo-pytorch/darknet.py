@@ -165,4 +165,3 @@ class Darknet(nn.Module):
         super().__init__()
         self.blocks = parse_cfg(cfgfile)
         self.net_info, self.module_list = create_modules(self.blocks)
-
