@@ -163,7 +163,7 @@ def create_modules(blocks):
 
 def get_test_input():
     img = cv2.imread('dog-cycle-car.png')
-    img = cv2.resize(img, (608, 608))               # Resize to the input dimension
+    img = cv2.resize(img, (416, 416))               # Resize to the input dimension
     img_ = img[:, :, ::-1].transpose((2, 0, 1))     # BGR -> RGB | H x W x C -> C x H x W
     img_ = img_[np.newaxis, :, :, :] / 255.0        # Add a channel at 0 (for batch) | Normalize
     img_ = torch.from_numpy(img_).float()           # Convert to float
@@ -185,7 +185,7 @@ class Darknet(nn.Module):
         outputs = {}                # We cache the outputs for the route layer
         detections = []
 
-        write = 0
+        write = False
 
         for i, module in enumerate(modules):
             module_type = module['type']
@@ -231,7 +231,7 @@ class Darknet(nn.Module):
 
                 if not write:       # if no collector has been initialized
                     detections = x
-                    write = 1
+                    write = True
                 else:
                     detections = torch.cat((detections, x), 1)
 
